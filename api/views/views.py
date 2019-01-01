@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from datetime import datetime
 from api import app
-from api.models.models import Incident, incidents_list, users, User
+from api.models.models import Incident, incidents_list, users, User, UserLogin
 
 # from api.models.incident import IncidentArray
  
@@ -12,10 +12,9 @@ from api.models.models import Incident, incidents_list, users, User
 @app.route('/api/v1/redflag', methods=['POST'])
 def create_redflag():
     data = request.get_json() 
-      
-    if not data  or not data['incidentType'] or not data['location']\
-     or not data['comment']:
-        return jsonify({'message': 'bad request', 'status': 404}), 404
+    if not request.json or not 'incidentType' in data or not 'location' in data or not 'comment' in data   or not 'createdby' in data\
+     or not 'createdon' in data :
+        return jsonify({'message': 'Some fields are empty, please cross check', 'status': 404}), 404
     # status = my_incident.get_status() 
     # id = my_incident.incidentId_generator()
     # createdby = my_incident.userId_generator()
@@ -82,20 +81,37 @@ def remove_redflag(id):
     incidents_list.remove(flag[0])
     return jsonify({'data':[{'id': flag[0]['id'] , 'message': 'redflag has been deleted'}], 'status': 200})
 
-@app.route('/api/v1/redflag', methods=['POST'])  
+@app.route('/api/v1/user/register', methods=['POST'])  
 def registerUser():
     data= request.get_json()
-    if not data or not data['firstname'] or not data['lastname'] or not data['email'] or not data['tel'] or not data['password']:
-         return jsonify({'message': 'bad request' , 'status': 404})
-    user = User(id, data[firstname], data['lastname'],data['othernames'], \
-    data['username'], data['password'],data['email'], data['registered_date'], data['isAdmin'])     
-    return jsonify({'user': user.__dict__ , 'status': 200 })     
+    if request.method == 'POST':
+        data= request.get_json()
+        if not request.json or not 'firstname' in data or not 'lastname' in data or not 'email' in data\
+         or not 'tel' in data or not 'password' in data or not 'IsAdmin' in data:
+            return jsonify({'message': 'bad request' , 'status': 404})
+        user = User(id, data['firstname'], data['lastname'],data['othernames'], \
+        data['username'], data['password'],data['email'], data['tel'], data['registered_date'], data['IsAdmin']) 
+        users.append(user)    
+        return jsonify({'user': user.__dict__ , 'status': 200 })  
+    return jsonify({'message': 'bad request' , 'status': 404})    
 
-# # @app.route('/redflag/<int:user_id>', methods=['GET'])
-# # def fetch_redflags_for_user(user_id):
-    
-# #     all_redflags = [redflag for redflag in Redflags if redflag['user_id']== user_id]
-# #     return jsonify({'redfalgs': all_redflags})
+@app.route('/api/v1/user/login', methods=['GET', 'POST'])  
+def login():
+    data = request.get_json()
+    if request.method == 'POST':
+        if 'username' in data and 'password' in data:
+            user= UserLogin(data['username'], data['password'])
+            person = [user for user in users if user.name == user.username and user.password==user.password]
+            if person:
+                return jsonify({'message': 'youre logged in'})
+            return jsonify({'message': 'please register first'})  
+        return jsonify({'message': ' Some fields are missing' ,'status': 400})      
+    return jsonify({'message': 'login'})    
+
+@app.route('/api/v1/user/<int:id>', methods=['GET'])
+def fetch_redflags_for_user(id):
+    all_redflags_by_specificUser = [redflag for redflag in incidents_list if redflag['createdby']== id]
+    return jsonify({'redfalgs': all_redflags_by_specificUser})
 
 
 
