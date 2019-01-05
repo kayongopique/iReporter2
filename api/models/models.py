@@ -1,7 +1,7 @@
 
+from api.models.incident import IncidentArray
 
-incidents_list = []
-users =[]
+my_incident = IncidentArray()
 
 
 class User:
@@ -9,8 +9,8 @@ class User:
     Creates a user object for each user.
     """
 
-    def __init__(self, id, firstname, lastname, othernames, username, password, email, tel, registered_date, IsAdmin):
-        self.id =len(users) +1
+    def __init__(self,id,  firstname, lastname, othernames, username, password, email, tel, registered_date):
+        self.id = id
         self.firstname= firstname
         self.lastname= lastname
         self.othernames=othernames
@@ -19,7 +19,7 @@ class User:
         self.email = email
         self.tel = tel
         self.registered = registered_date
-        self.IsAdmin= IsAdmin
+        self.IsAdmin= "False"
 
    
 
@@ -29,19 +29,19 @@ class Incident:
     Creates a incident object for each incident recieved.
     """
 
-    def __init__(self, id,createdby, createdon, incidentType, location, status, comment ):
-        self.id = len(incidents_list) +1
+    def __init__(self,id,createdby,createdon, incidentType, location, status, comment ):
+        self.id = id
         self.createdby = createdby
-        self.createdon= createdon
+        self.createdon=createdon 
         self.incidentType  = incidentType
         self.location = location
         self.status = status
         self.comment = comment
     
-    # def to_json(self ):
-    #     return {  'id': self.id, 'createdby': self.createdby, 'createdon': self.createdon, \
-    #     'incidentType': self.incidentType, 'location': self.location ,'status': self.status, \
-    #          'comment': self.comment }
+    def to_json(self ):
+        return {  'id': self.id, 'createdby': self.createdby, 'createdon': self.createdon, \
+        'incidentType': self.incidentType, 'location': self.location ,'status': self.status, \
+             'comment': self.comment }
    
 class UserLogin:
     def __init__(self, username, password):
