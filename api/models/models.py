@@ -1,7 +1,4 @@
 
-from api.models.incident import IncidentArray
-
-my_incident = IncidentArray()
 
 
 class User:

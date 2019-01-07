@@ -1,15 +1,14 @@
-from flask import Flask, jsonify, request
-from datetime import datetime
+from flask import Flask,Blueprint, jsonify, request
 from api import app
 from api.models.models import Incident, User, UserLogin
 
 from api.models.incident import IncidentArray
  
-
+views_blueprint =Blueprint('views',__name__)
 my_incident = IncidentArray()
 
 
-@app.route('/api/v1/redflag', methods=['POST'])
+@views_blueprint.route('/redflag', methods=['POST'])
 def create_redflag():
     data = request.get_json() 
     if not request.json or not 'incidentType' in data or not 'location' in data or not 'comment' in data:
@@ -23,39 +22,45 @@ def create_redflag():
     my_incident.create_redflag(redflag)
     return jsonify({'data': [{ 'id':redflag.id , 'message': 'created redflag'}], 'status': 201}) ,201
 
-@app.route('/api/v1/redflag', methods=['GET'])
+@views_blueprint.route('/redflag', methods=['GET'])
 def all_redflags():
     redflags = my_incident.fetch_all_redflags()
     if not redflags:
         return jsonify({'message': ' no flags found', 'status' : 404}) ,404
     return jsonify({'data':redflags, 'status': 200})
  
-@app.route('/api/v1/redflag/<int:id>', methods=['GET'])
+@views_blueprint.route('/redflag/<int:id>', methods=['GET'])
 def specific_redflag(id):
     specific_flag = my_incident.fetch_specific_flag(id)
     if not specific_flag:
         return jsonify({'message': 'flag not found', 'status': 404}), 404
     return jsonify({'data': specific_flag, 'status': 200})
 
-@app.route('/api/v1/redflag/<int:id>/location', methods=['PATCH'])
+@views_blueprint.route('/redflag/<int:id>/location', methods=['PATCH'])
 def edit_location(id):
         new_location = request.get_json()['location']
         redflag = my_incident.edit_location(id, new_location)
         if not redflag:
              return jsonify({'message': 'flag not found', 'status': 404}) ,404
+        elif len(redflag)==1:
+            return jsonify({'data':[{'id':id, 'message': 'can not perform this operation because the record  is'\
+        +" "+ redflag[0]['status']}], 'status': 200})     
         return jsonify({'data':[{'id':id, 'message': \
          'Updated red-flag record location'}], 'status': 200})
 
-@app.route('/api/v1/redflag/<int:id>/comment', methods=['PATCH'])
+@views_blueprint.route('/redflag/<int:id>/comment', methods=['PATCH'])
 def edit_comment(id):
         data = request.get_json()
         redflag = my_incident.edit_comment(id, data['comment'])
         if not redflag:
-             return jsonify({'message': 'flag not found', 'status': 404}) ,404    
+             return jsonify({'message': 'flag not found', 'status': 404}) ,404 
+        elif len(redflag)==1:
+            return jsonify({'data':[{'id':id, 'message': 'can not perform this operation because the record  is'\
+        +" "+ redflag[0]['status']}], 'status': 200})       
         return jsonify({'data':[{'id':id, \
         'message': "Updated red-flag records comment"}], 'status': 200})
 
-@app.route('/api/v1/redflag/<int:id>', methods=['PUT'])
+@views_blueprint.route('/redflag/<int:id>', methods=['PUT'])
 def edit_redflag(id):
         data = request.get_json()
         redflag = my_incident.edit_redflag(id, data['incidentType'], data['location'], data['comment'])
@@ -64,7 +69,7 @@ def edit_redflag(id):
        
         return jsonify({'redflag': redflag[0]})
 
-@app.route('/api/v1/redflag/<int:id>', methods=['DELETE'])
+@views_blueprint.route('/redflag/<int:id>', methods=['DELETE'])
 def remove_redflag(id):
     flag= my_incident.delete_redflag(id)
     if not flag:
@@ -72,7 +77,7 @@ def remove_redflag(id):
     return jsonify({'data':[{'id': id , 'message': 'redflag has been deleted'}], 'status': 200})
 
 
-@app.route('/api/v1/redflag/<int:id>/status', methods=['PATCH'])
+@views_blueprint.route('/redflag/<int:id>/status', methods=['PATCH'])
 def update_status(id):
     new_status= request.get_json()['status']
     updated_status= my_incident.updateStatus(id , new_status)
@@ -82,7 +87,7 @@ def update_status(id):
     'status': 200 })
 
 
-@app.route('/api/v1/user/register', methods=['POST'])  
+@views_blueprint.route('/user/register', methods=['POST'])  
 def registerUser():
     data= request.get_json()
     if request.method == 'POST':
@@ -96,7 +101,7 @@ def registerUser():
         return jsonify({'user': user.__dict__ , 'status': 200 })  
     return jsonify({'message': 'bad request' , 'status': 404})    
 
-@app.route('/api/v1/user/login', methods=['GET', 'POST'])  
+@views_blueprint.route('/user/login', methods=['GET', 'POST'])  
 def login():
     data = request.get_json()
     if request.method == 'POST':
@@ -109,14 +114,14 @@ def login():
         return jsonify({'message': ' Some fields are missing' ,'status': 400})      
     return jsonify({'message': 'login'})    
 
-@app.route('/api/v1/user/<int:id>', methods=['GET'])
+@views_blueprint.route('/user/<int:id>', methods=['GET'])
 def fetch_redflags_for_user(id):
     all_redflags_by_specificUser = [redflag for redflag in incidents_list if redflag['createdby']== id]
     return jsonify({'redfalgs': all_redflags_by_specificUser})
 
 
 
-if __name__== '__main__':
-    app.run(debug=False)
+# if __name__== '__main__':
+#     app.run(debug=False)
 
 

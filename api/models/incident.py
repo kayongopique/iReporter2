@@ -32,6 +32,8 @@ class IncidentArray:
         incident['id']==id]
         if not specific_flag:
             return []
+        elif not 'draft' in specific_flag:
+            return specific_flag[0]['status']    
         specific_flag[0]['comment'] = comment
         return specific_flag
             
