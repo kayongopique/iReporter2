@@ -6,7 +6,7 @@ class User:
     Creates a user object for each user.
     """
 
-    def __init__(self,id,  firstname, lastname, othernames, username, password, email, tel, registered_date):
+    def __init__(self,id,  firstname, lastname, othernames, username, password, email, tel, registered_date, IsAdmin):
         self.id = id
         self.firstname= firstname
         self.lastname= lastname
@@ -16,7 +16,7 @@ class User:
         self.email = email
         self.tel = tel
         self.registered = registered_date
-        self.IsAdmin= "False"
+        self.IsAdmin= IsAdmin
 
    
 

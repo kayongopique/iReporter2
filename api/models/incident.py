@@ -1,18 +1,12 @@
-
+from flask import jsonify
 from datetime import date ,datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class IncidentArray:
     
-    
-    def __init__(self):
-        self.incident_array =[]
-        self.users =[]
-
-    
-    def fetch_all_redflags(self):
-       
-        return self.incident_array
+    incident_array =[]
+    users =[]
 
     
     def create_redflag(self, incident):
@@ -21,6 +15,11 @@ class IncidentArray:
         return new_incident
 
     
+    def fetch_all_redflags(self):
+       
+        return self.incident_array
+    
+
     def fetch_specific_flag(self, id):
         specific_flag= [incident for incident in self.incident_array if \
         incident['id']==id]
@@ -32,10 +31,12 @@ class IncidentArray:
         incident['id']==id]
         if not specific_flag:
             return []
-        elif not 'draft' in specific_flag:
+        else:
+            if specific_flag[0]['status']== 'draft':
+                specific_flag[0]['comment'] = comment
+                return specific_flag
             return specific_flag[0]['status']    
-        specific_flag[0]['comment'] = comment
-        return specific_flag
+            
             
     
     
@@ -44,8 +45,11 @@ class IncidentArray:
         incident['id']==id]
         if not specific_flag:
             return []
-        specific_flag[0]['location'] = location
-        return specific_flag
+        else:
+            if specific_flag[0]['status']== 'draft':
+                specific_flag[0]['location'] = location
+                return specific_flag
+            return specific_flag[0]['status']    
         
 
 
@@ -65,25 +69,45 @@ class IncidentArray:
         return redflag
 
     def add_user(self, user):
-        if user.username in self.users:
+        if user.name in self.users:
             return "user with this username already exists"
         new_user = user
         self.users.append(new_user)
         return new_user 
 
+
+#promote user to be admin
+    def promote_user(self, id):
+        user = [user for user in self.users if user.id ==id]
+
+        if not user:
+            return None
+        user[0].IsAdmin = True
+        return True  
+
+
+    def fetch_all_users(self):
+        users_lst=[]
+        for users in self.users:
+            users_lst.append(users.__dict__)
+       
+        return users_lst  
+
     def loginuser(self, userInfo):
-        person = [user for user in self.users if user.name == userInfo.username and user.password==userInfo.password]
-        return person   
+        person = [user for user in self.users if user.name == userInfo.username]
+        if not person:
+            return False
+        if check_password_hash(person[0].password, userInfo.password):
+            return person
 
-
-    
+   
     def incidentId_generator(self):
         if len(self.incident_array) == 0:
             return 1
         return self.incident_array[-1]['id'] +1    
 
 
-    def incidentDate_generator(self):
+    def date_generator(self):
         return str(datetime.now())
 
 
