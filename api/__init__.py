@@ -2,10 +2,13 @@
 from flask import Flask
 from config import config
 
+
+
 def Create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    
 
     from api.views import views_blueprint
     # from api.views.views import views_blueprint
