@@ -1,10 +1,10 @@
 from flask import Flask, jsonify, request, current_app
 from api.models.models import Incident
 from . import views_blueprint
-from api.models.incident import IncidentArray
+from api.models.incident import IncidentController
 from functools import wraps
-my_incident = IncidentArray()
-users_array =my_incident.users
+dbconn= IncidentController()
+# users_array =my_incident.users
 # from api import Create_app
 
 
@@ -28,9 +28,9 @@ def token_required(func):
  
 
 @views_blueprint.route('/redflag/<int:id>', methods=['DELETE'])
-@token_required
-def remove_redflag(current_user, id):
-    flag= my_incident.delete_redflag(id)
+# @token_required
+def remove_redflag( id):
+    flag= dbconn.delete_redflag('incidents',id)
     if not flag:
         return jsonify({'message': 'flag not found', 'status': 400}), 404 
     return jsonify({'data':[{'id': id , 'message': 'redflag has been deleted'}], 'status': 200})

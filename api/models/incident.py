@@ -1,132 +1,224 @@
-from flask import jsonify
+from flask import jsonify, render_template, make_response
 from datetime import date ,datetime
+import uuid
+from flask_mail import Message
 from werkzeug.security import generate_password_hash, check_password_hash
+from api import Create_app
+import psycopg2
+import psycopg2.extras as ireport
+
+app = Create_app('default')
 
 
-class IncidentArray:
-    
-    incident_array =[]
-    users =[]
 
-    
-    def create_redflag(self, incident):
-        new_incident = incident.to_json()
-        self.incident_array.append(new_incident)
-        return new_incident
+class IncidentController:
 
+    # def __init__(self):
+        # database_url = app.config['DATABASE_URL']
+        # parsed_url = urlparse(database_url)
+        # dbname = parsed_url.path[1:]
+        # user = parsed_url.username
+        # host parsed_url.hostname
+       # password = parsed_url.password
+    # port parsed_url.port
+    connection = psycopg2.connect(
+           database ="ireporterdb",
+           user ="postgres",
+           password ="david",
+           host ="localhost",
+           port ="5432"
+        )
+    print(connection)
+    connection.autocommit = True
+    cursor = connection.cursor(cursor_factory = ireport.RealDictCursor)
+    # drop_incident_table="DROP TABLE users cascade"
+    # cursor.execute(drop_incident_table) 
+    users_table = "CREATE TABLE IF NOT EXISTS users(user_id serial PRIMARY KEY,\
+    firstname varchar(50),lastname varchar(50),\
+    othernames varchar(50),username varchar(50),password varchar(250),email varchar(50),tel varchar(50),\
+    registeredDate varchar(50),IsAdmin varchar(50));"
+    cursor.execute(users_table)
+    incident_table ="CREATE TABLE IF NOT EXISTS incidents(id serial PRIMARY KEY,\
+        createdby INTEGER REFERENCES users(user_id),createdon varchar(50),incidentType varchar(50),location varchar(50),status varchar(50),\
+        comment varchar(100));"
+    cursor.execute(incident_table)
+    grades_table = "CREATE TABLE IF NOT EXISTS grades(student_id serial PRIMARY KEY, \
+    studentno varchar(50),maths INTEGER,eng INTEGER,\
+    lug INTEGER,chem int);"
+    cursor.execute(grades_table)
     
-    def fetch_all_redflags(self):
-       
-        return self.incident_array
+        
     
+    # Create tables
 
-    def fetch_specific_flag(self, id):
-        specific_flag= [incident for incident in self.incident_array if \
-        incident['id']==id]
-        return specific_flag
+    # def create_tables(self):
 
-    
-    def edit_comment(self, id, comment):
-        specific_flag= [incident for incident in self.incident_array if \
-        incident['id']==id]
-        if not specific_flag:
-            return []
-        else:
-            if specific_flag[0]['status']== 'draft':
-                specific_flag[0]['comment'] = comment
-                return specific_flag
-            return specific_flag[0]['status']    
-            
-            
-    
-    
-    def edit_location(self, id, location):
-        specific_flag= [incident for incident in self.incident_array if \
-        incident['id']==id]
-        if not specific_flag:
-            return []
-        else:
-            if specific_flag[0]['status']== 'draft':
-                specific_flag[0]['location'] = location
-                return specific_flag
-            return specific_flag[0]['status']    
+    #     """ method creates tables """
+
+    #     incident_table ="CREATE TABLE IF NOT EXISTS incidents(id serial PRIMARY KEY,\
+    #     createdby varchar(50),createdon varchar(50),incidentType varchar(50),status varchar(50),\
+    #     comment varchar(100));"
+    #     self.cursor.execute(incident_table)
         
 
 
-    def delete_redflag(self, id):
-        specific_flag= [incident for incident in self.incident_array if \
-        incident['id']==id]
+    def drop_tables(self):
+        """ method deletes tables """
+
+        drop_incident_table="DROP TABLE incident_table cascade"
+        self.cursor.execute(drop_incident_table) 
+
+    def create_grade(self,grade):
+        self.cursor.execute("INSERT INTO grades(studentno,\
+        ,maths,eng,lug,chem)VALUES\
+        (%s,%s,%s,%s,%s);", (grade.studentno,grade.maths,\
+        grade.eng,grade.lug,grade.chem))
+
+    def sendmail(self,to,subject,user):
+        msg= Message(app.config['MAIL_SUBJECT_PREFIX'] + subject,\
+        seneder =app.config['MAIL_SENDER'],recipients = [to]) 
+        msg.body = make_response('new user'+ [user] + 'created' )
+        msg.body = '<b>HTML</b> body'
+        mail.send(msg)
+        return True
+
+    def create_redflag(self,incident):
+        self.cursor.execute("INSERT INTO incidents(createdby,\
+        createdon,incidentType,location,status,comment)VALUES\
+        (%s,%s,%s,%s,%s,%s);", (incident.createdby,incident.createdon,\
+        incident.incidentType,incident.location,incident.status,incident.comment))
+        
+    
+    def fetch_all(self,tablename):
+        """fetch all from database tables"""
+        query= ("SELECT * FROM %s;") %(tablename)
+        self.cursor.execute(query)
+        rows = self.cursor.fetchall()
+        return rows
+    
+
+    def fetch_specific_flag(self,tablename, flag_id):
+        """fetch one from the database table incidents"""
+        query = ("SELECT * FROM %s WHERE id = '%s';") %(tablename,flag_id)
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+        return row
+
+    def fetch_all_for_user(self,column,user_id):
+        query = ("SELECT * FROM incidents WHERE %s = %s;") %(column,user_id) 
+        self.cursor.execute(query)
+        all_userflags = self.cursor.fetch_all() 
+        return all_userflags  
+
+    
+    def edit_comment(self,tablename,column, flag_id, comment):
+        """updates the comment field in the databse"""
+        query = ("SELECT * FROM %s WHERE id = %s;") %(tablename,flag_id)
+        self.cursor.execute(query)
+        specific_flag = self.cursor.fetchone()
+        
         if not specific_flag:
             return []
-        self.incident_array.remove(specific_flag[0])
-        return specific_flag
+        else:
+            if specific_flag['status']== 'draft':
+                query= ("UPDATE %s SET %s = '%s' WHERE id = %s;")\
+                 %(tablename,column,comment,flag_id)
+                self.cursor.execute(query)
 
-    def edit_redflag(self, id, incidentType, location, comment): 
-        redflag =[redflag for redflag in self.incident_array if redflag['id']==id]
-        redflag[0]['incidentType']= incidentType
-        redflag[0]['location']= location
-        redflag[0]['comment']= comment
-        return redflag
+                return specific_flag
+            return specific_flag[status]    
+            
+            
+    def edit_location(self,tablename,column, flag_id, location):
+
+        """updates the location field in the databse"""
+        query = ("SELECT * FROM %s WHERE id = %s;") %(tablename,flag_id)
+        self.cursor.execute(query)
+        specific_flag = self.cursor.fetchone()
+        
+        if not specific_flag:
+            return []
+        else:
+            if specific_flag['status']== 'draft':
+                query= ("UPDATE %s SET %s = '%s' WHERE id = %s;")\
+                 %(tablename,column,location,flag_id)
+                self.cursor.execute(query)
+                return specific_flag
+            return specific_flag['status']    
+        
+
+
+    def delete_redflag(self,tablename, flag_id):
+        """deletes a field in the database"""
+        query = ("SELECT * FROM %s WHERE id = %s;") %(tablename,flag_id)
+        self.cursor.execute(query)
+        specific_flag = self.cursor.fetchone()
+        
+        if not specific_flag:
+            return []
+        query= ("DELETE FROM %s WHERE id = %s;")\
+         %(tablename,flag_id)
+        self.cursor.execute(query)
+        return specific_flag
+        
 
     def add_user(self, user):
-        if user.name in self.users:
-            return "user with this username already exists"
-        new_user = user
-        self.users.append(new_user)
-        return new_user 
-
+        """registers a new_user"""
+        query =("SELECT * FROM %s WHERE %s = '%s';") %('users', 'email',user.email)
+        self.cursor.execute(query)
+        users = self.cursor.fetchall()
+        if  not users:
+            self.cursor.execute("INSERT INTO users(firstname,\
+            lastname,othernames,username,password,email,tel,registeredDate,IsAdmin) VALUES\
+            (%s,%s,%s,%s,%s,%s,%s,%s,%s);", (user.firstname,user.lastname,\
+            user.othernames,user.name,user.password,\
+            user.email,user.tel,user.registered,user.IsAdmin))
+            return user
+        return False
 
 #promote user to be admin
-    def promote_user(self, id):
-        user = [user for user in self.users if user.id ==id]
-
+    def promote_user(self, user_id):
+        query = ("SELECT * FROM users WHERE id = user_id;")
+        self.cursor.execute(query)
+        user = self.cursor.fetchone
         if not user:
             return None
-        user[0].IsAdmin = True
+        user.IsAdmin = True
         return True  
 
 
-    def fetch_all_users(self):
-        users_lst=[]
-        for users in self.users:
-            users_lst.append(users.__dict__)
-       
-        return users_lst  
-
     def loginuser(self, userInfo):
-        person = [user for user in self.users if user.name == userInfo.username]
-        if not person:
-            return False
-        if check_password_hash(person[0].password, userInfo.password):
-            return person
+        query =("SELECT user_id, username, password FROM users;")
+        self.cursor.execute(query)
+        users = self.cursor.fetchall()
+        for user in users:
+            if user['username'] != userInfo.username:
+                return False
+            if check_password_hash(user['password'], userInfo.password):
+                return user
 
-   
-    def incidentId_generator(self):
-        if len(self.incident_array) == 0:
-            return 1
-        return self.incident_array[-1]['id'] +1    
-
+    def fetch_specific_user(self,tablename, id):
+        """fetch one from the database table users"""
+        query = ("SELECT * FROM %s WHERE user_id = %s;") %(tablename,id)
+        self.cursor.execute(query)
+        row = self.cursor.fetchone()
+        return row
 
     def date_generator(self):
         return str(datetime.now())
-
-
-    def createdby(self, username):
-        specific_user =[ user for user in self.users if user.name== username]
-
-        if specific_user:
-            return specific_user.id
-        return len(self.users) +1    
         
 
     def get_status(self):
         return "draft"        
 
-    def updateStatus(self,id, status):
-        specific_incident = [incident for incident in self.incident_array if incident['id']==id]
+    def updateStatus(self,tablename,id, status):
+        """updates the status field in the databse"""
+        query = ("SELECT * FROM %s WHERE id = %s;") %(tablename,flag_id)
+        self.cursor.execute(query)
+        specific_flag = self.cursor.fetchone()
         if not specific_incident:
             return []
-        specific_incident[0]['status']= status
+        specific_incident['status']= status
         return specific_incident
 
-
+    

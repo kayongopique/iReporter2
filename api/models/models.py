@@ -5,8 +5,8 @@ class User:
     Creates a user object for each user.
     """
 
-    def __init__(self,id,  firstname, lastname, othernames, username, password, email, tel, registered_date, IsAdmin):
-        self.id = id
+    def __init__(self,firstname, lastname, othernames, username, password,\
+     email, tel, registered_date, IsAdmin):
         self.firstname= firstname
         self.lastname= lastname
         self.othernames=othernames
@@ -25,8 +25,7 @@ class Incident:
     Creates a incident object for each incident recieved.
     """
 
-    def __init__(self,id,createdby,createdon, incidentType, location, status, comment ):
-        self.id = id
+    def __init__(self,createdby,createdon, incidentType, location, status, comment ):
         self.createdby = createdby
         self.createdon=createdon 
         self.incidentType  = incidentType
@@ -44,4 +43,20 @@ class UserLogin:
         self.username = username
         self.password =password
 
+
+class  Student:
+    """creates a student object for every student"""
+    def __init__(self,studentno,firstname,surname):
+        self.id = studentno
+        self.firstname =firstname
+        self.surname =surname
+
+class StudentGrade:
+    """create object for every grade"""
+    def __init__(self,studentno, maths,eng,lug,chem ):
+        self.studentno = studentno
+        self.maths = maths
+        self.eng = eng 
+        self.lug = lug  
+        self.chem = chem   
         

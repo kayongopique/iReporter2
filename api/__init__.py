@@ -1,11 +1,17 @@
 
 from flask import Flask
+from flask_cors import CORS
 from config import config
+from flask_mail import Mail
+cors = CORS()
+mail = Mail()
 
 def Create_app(config_name):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
+    cors.init_app(app)
+    mail.init_app(app)
 
     from api.views import views_blueprint
     # from api.views.views import views_blueprint
