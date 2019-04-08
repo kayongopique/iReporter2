@@ -8,6 +8,10 @@ import jwt
 from flask import current_app
 from functools import wraps
 from api.models.incident import IncidentController
+
+from api import Create_app
+
+app = Create_app('default')
  
 
 dbconn = IncidentController()
@@ -30,13 +34,13 @@ def registerUser():
         registered_user=dbconn.add_user(user)
         if registered_user is False:
             return jsonify({'message':'user with this username or email already exists'}) 
+
+        dbconn.sendmail(app.config['ADMIN_EMAIL'],'New user created', data['username'])
         return jsonify({'data': [{'id': registered_user.__dict__ ,'message': \
-            'user has been registered'}], 'status': 201 }) 
-        if app.config['ADMIN_MAIL']: 
-            try:
-                dbconn.sendmail(app.config['ADMIN_MAIL'],'New user created', data['username'])
-            except ConnectionError as e:
-                return jsonify({'msg': 'no internet connection'})
+            'user has been registered'}], 'status': 201 })       
+       
+            # except ConnectionError as e:
+            #     return jsonify({'msg': 'no internet connection'})
     return jsonify({'message': 'bad request' , 'status': 400})
 
 

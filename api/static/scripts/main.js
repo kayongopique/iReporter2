@@ -1,4 +1,5 @@
-// document.getElementById('summit_btn').addEventListener('click',Signup())
+// document.getElementById('summit_btn').addEventListener('submit',Signup);
+
 function Signup(){
     let firstname = document.getElementById('firstname').value;
     let lastname = document.getElementById('lastname').value;
@@ -28,7 +29,7 @@ function Signup(){
         method : 'POST',
         mode : 'cors',
         headers: {
-            'Content-Type': 'Application/json'  }, 
+            'Content-Type': 'Application/json'  , 'Access-Control-Allow-Orign':'*'}, 
             // 'Authorization': 'Bearer ${token}', 'x-access-token':'${token}'
      
         body : JSON.stringify(data)
@@ -37,9 +38,13 @@ function Signup(){
     .then(response=>{
         alert(response.message);
         if(response.message=='user has been registered'){
-            window.location.replace('login.html');
+            console.log('congs on this troubleshooting......')
         }
     })
+    .catch(function(error) {
+        console.log('there is a problem i guess');
+    });
+    
 
 }
 function login(){

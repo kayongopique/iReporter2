@@ -30,8 +30,8 @@ def token_required(func):
 
 
 @views_blueprint.route('/redflag/<int:id>/location', methods=['PATCH'])
-# @token_required
-def edit_location( id):
+@token_required
+def edit_location(current_user, id):
         new_location = request.get_json()['location']
         redflag = dbconn.edit_location('incidents','location',id, new_location)
         if not redflag:
@@ -45,8 +45,8 @@ def edit_location( id):
             'Updated red-flag record location'}], 'status': 200})
 
 @views_blueprint.route('/redflag/<int:id>/comment', methods=['PATCH'])
-# @token_required
-def edit_comment( id):
+@token_required
+def edit_comment(current_user, id):
         data = request.get_json()
         redflag = dbconn.edit_comment('incidents','comment',id, data['comment'])
         if not redflag:

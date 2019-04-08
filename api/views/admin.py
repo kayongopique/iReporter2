@@ -32,7 +32,7 @@ def token_required(func):
 @views_blueprint.route('/redflag/<int:id>/status', methods=['PATCH'])
 @token_required
 def update_status(current_user, id):
-    if 'Isadmin' in current_user is False or not current_user:
+    if 'Isadmin' in current_user is False:
         return jsonify({'msg': 'you dont have permission to perform this funtion'})
     new_status= request.get_json()['status']
     updated_status= dbconn.updateStatus('incidents',id , new_status)

@@ -1,4 +1,4 @@
-from flask import jsonify, render_template, make_response
+from flask import jsonify, render_template, make_response, current_app
 from datetime import date ,datetime
 import uuid
 from flask_mail import Message
@@ -6,8 +6,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from api import Create_app
 import psycopg2
 import psycopg2.extras as ireport
-
-app = Create_app('default')
+from api import Create_app
+from api import mail
 
 
 
@@ -75,10 +75,10 @@ class IncidentController:
         grade.eng,grade.lug,grade.chem))
 
     def sendmail(self,to,subject,user):
-        msg= Message(app.config['MAIL_SUBJECT_PREFIX'] + subject,\
-        seneder =app.config['MAIL_SENDER'],recipients = [to]) 
-        msg.body = make_response('new user'+ [user] + 'created' )
-        msg.body = '<b>HTML</b> body'
+        msg= Message(current_app.config['MAIL_SUBJECT_PREFIX'] + subject,\
+        sender =current_app.config['MAIL_SENDER'],recipients = [to]) 
+        msg.body = make_response('new user'+ user + 'created' )
+        msg.body = "new user"+ user + "created"
         mail.send(msg)
         return True
 
@@ -212,7 +212,7 @@ class IncidentController:
         return "draft"        
 
     def updateStatus(self,tablename,id, status):
-        """updates the status field in the databse"""
+        """updates the status field in the database"""
         query = ("SELECT * FROM %s WHERE id = %s;") %(tablename,flag_id)
         self.cursor.execute(query)
         specific_flag = self.cursor.fetchone()
